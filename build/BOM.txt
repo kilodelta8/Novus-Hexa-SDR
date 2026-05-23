@@ -1,0 +1,54 @@
+================================================================================
+SECTION A: CORE PROCESSING, DISPLAY & OPERATOR INTERFACE
+================================================================================
+[1]  1x Hoysond 4.0" 320x480 ST7796S SPI LCD Screen         $22.00  To Order
+[2]  1x ESP32-S3 Development Board (Dual-Core USB-C)         $7.00  To Order
+[3]  1x Si5351A Clock Generator Breakout Module              $6.00  To Order
+[4]  1x Rotary Encoder (Bourns PEC11R or equiv with switch)  $2.50  To Order
+[5]  6x Momentary Tactile Push Buttons (Right Front Panel)    $1.80  To Order
+[8a] 1x GX16 4-Pin Chassis Connector (Bottom Right Front)    $1.50  To Order
+[8b] 1x 4-Pin Cobra/Uniden Style Replacement Hand Microphone $12.00  To Order
+
+================================================================================
+SECTION B: SWR / POWER BRIDGE CIRCUIT
+================================================================================
+[9a] 1x FT37-43 Ferrite Toroid Core (Black)                 $0.75  To Order
+[9b] 2x 1N4148 High-Speed Switching RF Signal Diodes         $0.20  To Order
+[9c] 2x 51 Ohm 1-Watt Carbon or Metal Film Resistors         $0.30  To Order
+[9d] 2x 10nF (0.01uF) Ceramic Disc Capacitors (50V-100V)     $0.20  To Order
+[9e] 2x 10k Ohm Single-Turn Trimpots (3362P or similar)      $0.50  To Order
+
+================================================================================
+SECTION C: INTEGRATED FILTER BANK MATRIX (LPF + BPF COMBINED)
+================================================================================
+[10a] 5x  T37-2 Carbonyl Iron Toroid Cores (Red - Low Bands) $3.75  To Order
+[10b] 25x T37-6 Carbonyl Iron Toroid Cores (Yellow - High)   $18.75  To Order
+[10c] 1x  50ft Spool 28 AWG Polyurethane Enameled Magnet Wire $4.00  To Order
+[10d] 24x C0G/NP0 Ceramic Capacitors (100V assorted values)  $3.60  To Order
+
+================================================================================
+SECTION D: ACTIVE RF MIXER, PRE-AMP, TRANSMITTER PA & SWITCHING
+================================================================================
+[6a] 1x FST3253 High-Speed Bus Multiplexer (Tayloe Mixer)   $2.00  To Order
+[6b] 1x 74AC74 High-Speed Dual D-Type Flip-Flop (Phase Split) $0.60  To Order
+[6c] 1x LM358 Low-Noise Dual Operational Amplifier (Pre-amp) $0.40  To Order
+[6d] 4x 10nF Polypropylene Caps (Mixer Sampling Capacitors)  $0.40  To Order
+[6e] LM358 Audio Pre-Amp Resistor & Capacitor Passive Kit    $1.20  To Order
+[7a] 1x IRF510 Power MOSFET Transistor (TO-220 Package)      $0.80  To Order
+[7b] 1x 74ACT08 High-Speed Quad AND Gate (MOSFET Driver IC)  $0.50  To Order
+[7c] 1x Small TO-220 Clip-on Aluminum Heatsink               $0.60  To Order
+[7d] 1x FT37-43 Ferrite Toroid (PA Output Transformer Core)  $0.75  To Order
+[7e] Transmitter Gate Bias Passive Parts Kit                 $1.00  To Order
+[11] 6x Omron G5V-2 5V DPDT Sub-miniature Signal Relays      $7.50  To Order
+
+================================================================================
+SECTION E: CHASSIS, POWER STORAGE & ENCLOSURE MECHANICS
+================================================================================
+[12]  1x Extruded Aluminum Enclosure Box (6" x 4" x 2.5")   $11.00  To Order
+[13]  1x BNC Chassis Mount Female RF Connector (Right Panel)  $1.20  To Order
+[14a] 2x 2.1mm Panel Mount DC Power Barrel Jacks (Left Panel) $1.60  To Order
+[14b] 1x 3S 11.1V 3200mAh Lithium-Ion Battery Pack          $14.00  To Order
+[14c] 1x 3S 12V Lithium Battery Charger/BMS Protection Board  $2.50  To Order
+[15]  1x SPST Heavy-Duty Toggle Power Switch (Far Left Front) $0.75  To Order
+================================================================================
+GRAND TOTAL KIT RAW MATERIAL COST:                           ~$132.10
