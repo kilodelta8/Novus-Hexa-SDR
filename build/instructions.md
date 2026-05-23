@@ -112,22 +112,24 @@ GPIO 6      <-------------------->   Switch Line (SW)
 
 
 ## 2.2 Software Environment Configuration
+
 To optimize the frame rate of the 4.0-inch screen and prevent tuning lag, you must configure the **TFT_eSPI** library to bypass standard slow Arduino drawing instructions and talk directly to the ESP32's hardware register blocks.
 
-<Sequence>
-  <Step title="Install Arduino IDE and Boards" subtitle="Prerequisite">
-    Download the latest Arduino IDE. Open Preferences, add the ESP32 board manager URL, and install the `esp32` board library platform by Expressif. Select **ESP32-S3 Dev Module** as your active target hardware board.
-  </Step>
-  <Step title="Download Libraries" subtitle="Dependencies">
-    Open the Library Manager and install **TFT_eSPI** by Bodmer, and the **Etherkit Si5351** library by Jason Mildrum (NT7S).
-  </Step>
-  <Step title="Locate User_Setup.h" subtitle="Configuration File">
-    Navigate to your local computer's file system path: `Documents/Arduino/libraries/TFT_eSPI/`. Open the file titled `User_Setup.h` in a plain-text editor.
-  </Step>
-  <Step title="Overwrite Library Profiles" subtitle="Hardware Binding">
-    Wipe out the file's default contents and paste the following hardware configuration profile block into it, then save and close the file:
-  </Step>
-</Sequence>
+### Step 1: Install Arduino IDE and Boards (Prerequisite)
+
+Download the latest Arduino IDE. Open Preferences, add the ESP32 board manager URL, and install the `esp32` board library platform by Expressif. Select **ESP32-S3 Dev Module** as your active target hardware board.
+
+### Step 2: Download Libraries (Dependencies)
+
+Open the Library Manager and install **TFT_eSPI** by Bodmer, and the **Etherkit Si5351** library by Jason Mildrum (NT7S).
+
+### Step 3: Locate User_Setup.h (Configuration File)
+
+Navigate to your local computer's file system path: `Documents/Arduino/libraries/TFT_eSPI/`. Open the file titled `User_Setup.h` in a plain-text editor.
+
+### Step 4: Overwrite Library Profiles (Hardware Binding)
+
+Wipe out the file's default contents and paste the following hardware configuration profile block into it, then save and close the file:
 
 ```cpp
 // ============================================================================
@@ -152,11 +154,11 @@ To optimize the frame rate of the 4.0-inch screen and prevent tuning lag, you mu
 #define TFT_RGB_ORDER TFT_BGR         // Fixes standard color rendering profiles
 ```
 
----
+## 2.3 Verification Milestone & Initial Test Code
 
-# CHAPTER 3: KIT B - SWR & POWER BRIDGE CIRCUIT
+Use this test code to verify the display and encoder are functioning correctly:
 
-2.3 Verification Milestone & Initial Test Code
+```cpp
 #include <SPI.h>
 #include <TFT_eSPI.h> 
 
@@ -209,7 +211,17 @@ void loop() {
   }
   delay(30);
 }
-Success Criteria: When powered up, the screen will display a clean blue dividing grid frame. Spin the rotary encoder shaft; the green frequency readout numbers in the upper right quadrant must update instantly and smoothly without flicker or lag.CHAPTER 3: KIT B - SWR & POWER BRIDGE CIRCUIT3.1 Understanding RF Power DetectionA transmitter needs a way to evaluate how efficiently its energy travels out into the sky. The SWR & Power Bridge (Directional Coupler) acts as an inline diagnostic sensor placed directly between the output low-pass filters and the antenna BNC jack.       [ From LPF Transmit Network Input ]
+```
+
+**Success Criteria:** When powered up, the screen will display a clean blue dividing grid frame. Spin the rotary encoder shaft; the green frequency readout numbers in the upper right quadrant must update instantly and smoothly without flicker or lag.
+
+---
+
+# CHAPTER 3: KIT B - SWR & POWER BRIDGE CIRCUIT
+
+## 3.1 Understanding RF Power Detection
+
+A transmitter needs a way to evaluate how efficiently its energy travels out into the sky. The SWR & Power Bridge (Directional Coupler) acts as an inline diagnostic sensor placed directly between the output low-pass filters and the antenna BNC jack.       [ From LPF Transmit Network Input ]
                       │
                       ▼
             +-------------------+
@@ -233,7 +245,15 @@ Success Criteria: When powered up, the screen will display a clean blue dividing
                  |         |
                  ▼         ▼
              [ESP32 Analog Sense Input Pins]
-When high-frequency alternating current passes down the central wire toward an antenna, it creates a moving magnetic field. By wrapping a secondary sensing coil of wire around a high-permeability FT37-43 ferrite toroid core, we sample a tiny fraction of that electromagnetic energy.Forward Voltage ($V_{\text{fwd}}$): Measures the raw power leaving the transmitter.Reflected Voltage ($V_{\text{ref}}$): Measures any power bouncing back toward the radio caused by an un-tuned or mismatched antenna.Two fast 1N4148 diodes act as RF rectifiers, converting this high-frequency AC signal into smooth DC voltage that our microcontroller can easily read.3.2 Schematic & Physical AssemblyAssemble the bridge circuit on your prototyping block using the following configuration map:                            FT37-43 Core
+When high-frequency alternating current passes down the central wire toward an antenna, it creates a moving magnetic field. By wrapping a secondary sensing coil of wire around a high-permeability FT37-43 ferrite toroid core, we sample a tiny fraction of that electromagnetic energy.
+
+**Forward Voltage** ($V_{\text{fwd}}$): Measures the raw power leaving the transmitter.
+
+**Reflected Voltage** ($V_{\text{ref}}$): Measures any power bouncing back toward the radio caused by an un-tuned or mismatched antenna.
+
+Two fast 1N4148 diodes act as RF rectifiers, converting this high-frequency AC signal into smooth DC voltage that our microcontroller can easily read.
+
+## 3.2 Schematic & Physical AssemblyAssemble the bridge circuit on your prototyping block using the following configuration map:                            FT37-43 Core
                          +-----------------+
 Transmitter Input ------ |== Primary Pass =| ------ BNC Antenna Pin
                          +--------+--------+
@@ -251,7 +271,47 @@ Transmitter Input ------ |== Primary Pass =| ------ BNC Antenna Pin
              Cap     Pot    GPIO 34                Cap     Pot    GPIO 35
                │       │ (ADC Pin)                   │       │ (ADC Pin)
              GND     GND                           GND     GND
-The 51 $\Omega$ 1-Watt Termination Resistors: These handle the excess RF energy sampled by the sensing loop. They must be rated for at least 0.5W to 1W to prevent them from burning open during high-SWR tuning testing.The 10k $\Omega$ Trimpots: These serve as adjustable safety dividers. They ensure the rectified voltage never exceeds 3.3V, protecting the ESP32's sensitive ADC inputs from over-voltage damage.3.3 Calibration & Computational MathOnce assembled, the ESP32 reads these analog input voltages and processes them using real-time mathematical equations embedded within your main Core 1 control loop.The Standing Wave Ratio (SWR) calculation follows this core formula:$$\text{SWR} = \frac{V_{\text{fwd}} + V_{\text{ref}}}{V_{\text{fwd}} - V_{\text{ref}}}$$Step-by-Step Calibration Procedure:Connect a verified $50\,\Omega$ QRP Dummy Load directly to the antenna BNC output jack.Dial both 10k $\Omega$ trimpots completely counter-clockwise to their lowest voltage output setting.Transmit a continuous CW carrier wave at 5 Watts.Use a small screwdriver to slowly turn the Forward Pot clockwise until your screen's graphical power bar hits the 5W mark.Swap the dummy load for an unmatched, open wire line. Verify that the Reflected Pot registers a voltage increase, triggering a high SWR alert on your screen.CHAPTER 4: KIT C - INTEGRATED FILTER BANK MATRIX4.1 Low Pass Filters (LPF) vs. Band Pass Filters (BPF)A 6-band radio operates across a wide spectrum range ($7\text{ MHz}$ up to $29\text{ MHz}$). To stay within FCC specifications and keep your receiver clean, every band requires two distinct filter networks:Low Pass Filter (LPF - Transmit Mode): Allows your fundamental transmitting frequency to pass through safely but blocks high-frequency harmonics ($2\times, 3\times$ your operating frequency) generated by the switching output transistor.Band Pass Filter (BPF - Receive Mode): Acts as a narrow frequency window. It rejects massive out-of-band signals (such as commercial shortwave AM broadcast towers) before they reach the sensitive mixer chip.4.2 Toroid Winding MethodologyWinding inductors on small carbonyl iron toroid rings is a core skill in homebrew radio assembly.Counting Turns: One "turn" is counted every single time the enameled copper wire passes through the hollow center hole of the toroid ring. If the wire merely wraps over the outside edge, it does not count.Spacing: Distribute the wire turns evenly around roughly $270^\circ$ of the toroid's circumference. Leave a clean $90^\circ$ gap between the start and end wires to minimize unwanted stray capacitance.Enamel Removal: The wire is insulated with a clear polyurethane coating. Before soldering the toroid lead into the circuit board, you must strip this insulation away. Use fine sandpaper, a hobby knife to scrape the tip clean, or melt the enamel coating away using a hot blob of solder on your iron's tip.4.3 Master Filter Matrix Constants TableEvery band uses a 7-element Chebyshev configuration for the transmit LPF bank (3 toroids, 4 capacitors) and a 2-pole inductively coupled loop for the receive BPF bank (2 toroids, 3 capacitors).All capacitors listed below MUST be high-stability, high-voltage (100V minimum) components featuring an NP0 or C0G dielectric rating to prevent frequency drift when the radio warms up.================================================================================
+**51 Ω 1-Watt Termination Resistors:** These handle the excess RF energy sampled by the sensing loop. They must be rated for at least 0.5W to 1W to prevent them from burning open during high-SWR tuning testing.
+
+**10k Ω Trimpots:** These serve as adjustable safety dividers. They ensure the rectified voltage never exceeds 3.3V, protecting the ESP32's sensitive ADC inputs from over-voltage damage.
+
+## 3.3 Calibration & Computational MathOnce assembled, the ESP32 reads these analog input voltages and processes them using real-time mathematical equations embedded within your main Core 1 control loop.
+
+The Standing Wave Ratio (SWR) calculation follows this core formula:
+
+$$\text{SWR} = \frac{V_{\text{fwd}} + V_{\text{ref}}}{V_{\text{fwd}} - V_{\text{ref}}}$$
+
+### Step-by-Step Calibration Procedure:
+
+1. Connect a verified 50 Ω QRP Dummy Load directly to the antenna BNC output jack.
+2. Dial both 10k Ω trimpots completely counter-clockwise to their lowest voltage output setting.
+3. Transmit a continuous CW carrier wave at 5 Watts.
+4. Use a small screwdriver to slowly turn the Forward Pot clockwise until your screen's graphical power bar hits the 5W mark.
+5. Swap the dummy load for an unmatched, open wire line. Verify that the Reflected Pot registers a voltage increase, triggering a high SWR alert on your screen.
+
+---
+
+# CHAPTER 4: KIT C - INTEGRATED FILTER BANK MATRIX
+
+## 4.1 Low Pass Filters (LPF) vs. Band Pass Filters (BPF)
+
+A 6-band radio operates across a wide spectrum range (7 MHz up to 29 MHz). To stay within FCC specifications and keep your receiver clean, every band requires two distinct filter networks:
+
+**Low Pass Filter (LPF - Transmit Mode):** Allows your fundamental transmitting frequency to pass through safely but blocks high-frequency harmonics (2×, 3× your operating frequency) generated by the switching output transistor.
+
+**Band Pass Filter (BPF - Receive Mode):** Acts as a narrow frequency window. It rejects massive out-of-band signals (such as commercial shortwave AM broadcast towers) before they reach the sensitive mixer chip.
+
+## 4.2 Toroid Winding Methodology
+
+Winding inductors on small carbonyl iron toroid rings is a core skill in homebrew radio assembly.
+
+**Counting Turns:** One "turn" is counted every single time the enameled copper wire passes through the hollow center hole of the toroid ring. If the wire merely wraps over the outside edge, it does not count.
+
+**Spacing:** Distribute the wire turns evenly around roughly 270° of the toroid's circumference. Leave a clean 90° gap between the start and end wires to minimize unwanted stray capacitance.
+
+**Enamel Removal:** The wire is insulated with a clear polyurethane coating. Before soldering the toroid lead into the circuit board, you must strip this insulation away. Use fine sandpaper, a hobby knife to scrape the tip clean, or melt the enamel coating away using a hot blob of solder on your iron's tip.
+
+## 4.3 Master Filter Matrix Constants TableEvery band uses a 7-element Chebyshev configuration for the transmit LPF bank (3 toroids, 4 capacitors) and a 2-pole inductively coupled loop for the receive BPF bank (2 toroids, 3 capacitors).All capacitors listed below MUST be high-stability, high-voltage (100V minimum) components featuring an NP0 or C0G dielectric rating to prevent frequency drift when the radio warms up.================================================================================
 MASTER MATRIX VALUE SPECIFICATIONS
 ================================================================================
 BAND   | TRANSMIT LPF MATRIX VALUES          | RECEIVE BPF MATRIX VALUES
@@ -275,7 +335,8 @@ BAND   | TRANSMIT LPF MATRIX VALUES          | RECEIVE BPF MATRIX VALUES
 10m    | 3x T37-6 (Yellow)| 82 pF  | 180 pF  | 2x T37-6 (Yellow)| 68 pF  | 3.3 pF
        | 10 Turns         |                  | 11 Turns         |
 ================================================================================
-4.4 Automated Relay Routing NetworkTo automatically swap the correct filter modules into the antenna line when you spin the VFO knob, the ESP32 controls a matrix of six Omron G5V-2 sub-miniature 5V DPDT relays.                       +5V Supply Rail
+
+## 4.4 Automated Relay Routing NetworkTo automatically swap the correct filter modules into the antenna line when you spin the VFO knob, the ESP32 controls a matrix of six Omron G5V-2 sub-miniature 5V DPDT relays.                       +5V Supply Rail
                              │
                              ▼
                     +--------+--------+
@@ -291,7 +352,13 @@ BAND   | TRANSMIT LPF MATRIX VALUES          | RECEIVE BPF MATRIX VALUES
                              │ (1k Resistor)
                              │
                      ESP32 Band GPIO Pin
-The ESP32 pins cannot supply enough current to drive a mechanical relay coil directly. To fix this, each relay coil is switched using an affordable 2N2222 NPN transistor.When the ESP32 drives its designated band pin HIGH ($3.3\text{V}$), current flows through a $1\text{k}\Omega$ resistor into the transistor's Base.This turns the transistor fully ON, pulling the bottom of the relay coil to Ground and cleanly latching the matching filter module into the active signal path.CHAPTER 5: KIT D - ACTIVE RF MIXER, PRE-AMP & TRANSMITTER PA5.1 The FST3253 Tayloe Mixer CircuitThe heart of the receiver is the FST3253 high-speed bus multiplexer chip, operating as a Tayloe Quadrature Sampling Detector.                    74AC74 Phase Splitter
+The ESP32 pins cannot supply enough current to drive a mechanical relay coil directly. To fix this, each relay coil is switched using an affordable 2N2222 NPN transistor.When the ESP32 drives its designated band pin HIGH (3.3V), current flows through a 1 kΩ resistor into the transistor's Base. This turns the transistor fully ON, pulling the bottom of the relay coil to Ground and cleanly latching the matching filter module into the active signal path.
+
+---
+
+# CHAPTER 5: KIT D - ACTIVE RF MIXER, PRE-AMP & TRANSMITTER PA
+
+## 5.1 The FST3253 Tayloe Mixer CircuitThe heart of the receiver is the FST3253 high-speed bus multiplexer chip, operating as a Tayloe Quadrature Sampling Detector.                    74AC74 Phase Splitter
                   +------------------------+
 Si5351A CLK0 ---->| Clock Input (4x Freq)  |
                   |                        |
@@ -309,7 +376,9 @@ Antenna Signal ─────────────────────�
                                          │  │  │  │
                                          ▼  ▼  ▼  ▼
                                       [ Analog I/Q Audio ]
-The Si5351A clock generator outputs a high-frequency square wave at exactly four times your operating frequency. This 4x carrier enters the 74AC74 dual D-type flip-flop, which splits it into four synchronized output lines, each delayed by exactly 90 degrees ($0^\circ, 90^\circ, 180^\circ, 270^\circ$).These four clock phases rapidly open and close the internal electronic switches of the FST3253 multiplexer chip. This cycles the antenna's incoming RF signal across four identical 10nF polypropylene sampling capacitors, cleanly dropping the radio waves straight down into baseband I (In-Phase) and Q (Quadrature) audio signals.5.2 Audio Pre-Amplifier StageThe audio signals leaving the mixer are incredibly faint (measured in microvolts) and must be amplified before the ESP32 can process them. We use an LM358 operational amplifier configured for differential gain.Mixer Phase 0°  ───[ 1k ]───┬───┐
+The Si5351A clock generator outputs a high-frequency square wave at exactly four times your operating frequency. This 4x carrier enters the 74AC74 dual D-type flip-flop, which splits it into four synchronized output lines, each delayed by exactly 90 degrees ($0^\circ, 90^\circ, 180^\circ, 270^\circ$).These four clock phases rapidly open and close the internal electronic switches of the FST3253 multiplexer chip. This cycles the antenna's incoming RF signal across four identical 10nF polypropylene sampling capacitors, cleanly dropping the radio waves straight down into baseband I (In-Phase) and Q (Quadrature) audio signals.
+
+## 5.2 Audio Pre-Amplifier StageThe audio signals leaving the mixer are incredibly faint (measured in microvolts) and must be amplified before the ESP32 can process them. We use an LM358 operational amplifier configured for differential gain.Mixer Phase 0°  ───[ 1k ]───┬───┐
                             │   ▼
                             │ ┌───┐
                             ├─┤ - │
@@ -319,11 +388,29 @@ Mixer Phase 180°───[ 1k ]───┼─┤ + │
                             ├───[ 100k Feedback ]───┐
                             │                       │
                             └───[ 1.65V DC Bias ]───┘
-Gain Calculation: By placing a 100k $\Omega$ feedback resistor across the operational amplifier circuit alongside a 1k $\Omega$ input resistor, we establish a fixed stage gain of exactly 100x ($40\text{ dB}$ of amplification).The 1.65V Virtual Ground Bias: Because the ESP32's ADC pins can only safely process positive DC voltages (0V to 3.3V), a dual $10\text{k}\Omega$ resistor divider network acts as a voltage splitter. This injects a continuous 1.65V DC baseline bias offset right onto the input lines, centering the amplified audio wave perfectly in the middle of the microcontroller's safe sampling window.5.3 IRF510 Class-E Power AmplifierFor transmitting, we use an affordable IRF510 power MOSFET configured as an efficient, high-speed Class-E switching amplifier.Si5351A CLK1 ──> [ 74ACT08 Buffer ] ──[ 10 Ohm ]──┬──> IRF510 Gate
+**Gain Calculation:** By placing a 100k Ω feedback resistor across the operational amplifier circuit alongside a 1k Ω input resistor, we establish a fixed stage gain of exactly 100x (40 dB of amplification).
+
+**The 1.65V Virtual Ground Bias:** Because the ESP32's ADC pins can only safely process positive DC voltages (0V to 3.3V), a dual 10 kΩ resistor divider network acts as a voltage splitter. This injects a continuous 1.65V DC baseline bias offset right onto the input lines, centering the amplified audio wave perfectly in the middle of the microcontroller's safe sampling window.
+
+## 5.3 IRF510 Class-E Power AmplifierFor transmitting, we use an affordable IRF510 power MOSFET configured as an efficient, high-speed Class-E switching amplifier.Si5351A CLK1 ──> [ 74ACT08 Buffer ] ──[ 10 Ohm ]──┬──> IRF510 Gate
                                                    │
                                             [ Gate Bias pot ] (1.65V - 3.8V)
-The 74ACT08 Gate Driver: The Si5351A clock generator breakout board lacks the drive current required to switch the heavy internal gate capacitance of the IRF510 cleanly at high frequencies. We pass the clock signal through a fast 74ACT08 logic buffer gate to ensure clean, crisp switching.The Adjustable Bias Circuit: MOSFETs require a steady DC bias voltage on their gate before they begin conducting. By running an adjustable voltage divider trimpot from the power rail, you can manually dial the gate bias from 1.65V up to 3.8V. This allows you to scale the radio's output power safely from a stealthy 0.1 Watts up to a full 10 Watts.The 4:1 Output Transformer: The switching output of the IRF510 has a very low impedance. To match this to a standard $50\,\Omega$ coaxial antenna system, we wind a simple 4:1 impedance transformer. This consists of 4 turns of twisted-pair (bifilar) enameled wire wound through an FT37-43 ferrite core.CHAPTER 6: KIT E - CHASSIS, POWER STORAGE & MECHANICS6.1 Mechanical Layout and ErgonomicsKit E integrates all the completed modules into a rugged 6.0" × 4.0" × 2.5" extruded aluminum project box.To block stray noise and digital clock bleed from degrading your receiver's performance, you must follow a strict signal isolation layout rule: All high-voltage power components are kept on one side of the box, while all sensitive RF antenna lines are grouped on the opposite side.Left Panel (The Power Management Wall)Houses raw DC electrical infrastructure.Main 2.1mm DC Power Jack: Connects directly to external power supplies or portable field batteries.Bottom 2.1mm Charging Port: Feeds an internal 3S Lithium Protection Board (BMS) to safely balance-charge the internal 11.1V battery pack without exposing the radio's delicate digital processors to voltage spikes.Master SPST Power Switch: Disconnects the battery rail completely from the internal electronics.Right Panel (The Radio Frequency Signal Wall)Houses pure high-frequency communication lines.Antenna BNC Connector: Placed high on the side panel for clean strain relief of your coaxial antenna wire feedlines.Microphone / Keyer Chassis Jack (GX16-4): Mounted on the lower right front panel, allowing easy access for hand microphone PTT or a Morse code straight key.6.2 Master Production Interconnection SchematicThis comprehensive system blueprint shows how the completed kits link together across the internal frame walls:+-----------------------------------------------------------------------------------------+
-|                                    NOVIS HEXA-SDR CHASSIS                               |
+**The 74ACT08 Gate Driver:** The Si5351A clock generator breakout board lacks the drive current required to switch the heavy internal gate capacitance of the IRF510 cleanly at high frequencies. We pass the clock signal through a fast 74ACT08 logic buffer gate to ensure clean, crisp switching.
+
+**The Adjustable Bias Circuit:** MOSFETs require a steady DC bias voltage on their gate before they begin conducting. By running an adjustable voltage divider trimpot from the power rail, you can manually dial the gate bias from 1.65V up to 3.8V. This allows you to scale the radio's output power safely from a stealthy 0.1 Watts up to a full 10 Watts.
+
+**The 4:1 Output Transformer:** The switching output of the IRF510 has a very low impedance. To match this to a standard 50 Ω coaxial antenna system, we wind a simple 4:1 impedance transformer. This consists of 4 turns of twisted-pair (bifilar) enameled wire wound through an FT37-43 ferrite core.
+
+---
+
+# CHAPTER 6: KIT E - CHASSIS, POWER STORAGE & MECHANICS
+
+## 6.1 Mechanical Layout and ErgonomicsKit E integrates all the completed modules into a rugged 6.0" × 4.0" × 2.5" extruded aluminum project box.To block stray noise and digital clock bleed from degrading your receiver's performance, you must follow a strict signal isolation layout rule: All high-voltage power components are kept on one side of the box, while all sensitive RF antenna lines are grouped on the opposite side.Left Panel (The Power Management Wall)Houses raw DC electrical infrastructure.Main 2.1mm DC Power Jack: Connects directly to external power supplies or portable field batteries.Bottom 2.1mm Charging Port: Feeds an internal 3S Lithium Protection Board (BMS) to safely balance-charge the internal 11.1V battery pack without exposing the radio's delicate digital processors to voltage spikes.Master SPST Power Switch: Disconnects the battery rail completely from the internal electronics.Right Panel (The Radio Frequency Signal Wall)Houses pure high-frequency communication lines.**Antenna BNC Connector:** Placed high on the side panel for clean strain relief of your coaxial antenna wire feedlines.
+
+**Microphone / Keyer Chassis Jack (GX16-4):** Mounted on the lower right front panel, allowing easy access for hand microphone PTT or a Morse code straight key.
+
+## 6.2 Master Production Interconnection SchematicThis comprehensive system blueprint shows how the completed kits link together across the internal frame walls:+-----------------------------------------------------------------------------------------+
+|                                   NOVUS HEXA-SDR CHASSIS                                |
 |                                                                                         |
 |  [ LEFT PANEL: POWER ]                                         [ RIGHT PANEL: SIGNALS ] |
 |                                                                                         |
@@ -345,8 +432,11 @@ The 74ACT08 Gate Driver: The Si5351A clock generator breakout board lacks the dr
 |                                                                                         |
 +-----------------------------------------------------------------------------------------+
 
-CHAPTER 7: PRODUCTION COMPREHENSIVE BILL OF MATERIALS
-This master production ledger accounts for every individual component required to source and pack the complete 5-stage Novis Hexa-SDR kit system.
+---
+
+# CHAPTER 7: PRODUCTION COMPREHENSIVE BILL OF MATERIALS
+
+This master production ledger accounts for every individual component required to source and pack the complete 5-stage Novus Hexa-SDR kit system.
 
 ================================================================================
 KIT PACKAGE A: CORE PROCESSING, DISPLAY & OPERATOR INTERFACE
@@ -409,10 +499,14 @@ KIT PACKAGE E: CHASSIS, POWER STORAGE & ENCLOSURE MECHANICS
 [E5]  1x 3S 12.6V Lithium Battery Balance Charger/BMS Protection Board module
 [E6]  1x SPST Heavy-Duty Toggle or Rocker Power Switch (Far Left Front Faceplate)
 ================================================================================
-CHAPTER 8: MASTER PRODUCTION COMPREHENSIVE CODE REFERENCE
-This is the verified Novis Hexa-SDR v1.7 firmware source code. It contains all cross-core scheduling links, the Goertzel audio sampling routines on Core 0, and display processing tasks on Core 1.
 
-C++
+---
+
+# CHAPTER 8: MASTER PRODUCTION COMPREHENSIVE CODE REFERENCE
+
+This is the verified Novus Hexa-SDR v1.7 firmware source code. It contains all cross-core scheduling links, the Goertzel audio sampling routines on Core 0, and display processing tasks on Core 1.
+
+```cpp
 #include <Wire.h>
 #include <si5351.h>
 #include <TFT_eSPI.h> 

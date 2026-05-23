@@ -1,3 +1,21 @@
+/*
+* NOVIS HEXA-SDR v1.7
+* Date: May 23, 2026
+* Author: KD8UFZ (John Durham), with heavy inspiration from the original Si5351A tuning and Goertzel DSP work of W8YI (Bill Carver) and
+* the TFT_eSPI graphics framework by Bodmer.  As well as N3FJZ and his MAX-SSB Project. This project is a labor of love to create a 
+* compact, efficient, and visually intuitive software-defined radio transceiver interface using the powerful ESP32-S3 microcontroller 
+* and a vibrant 4.0" ST7796S SPI display. 
+* The code is structured to maximize performance by leveraging dual-core processing for real-time signal decoding and responsive user 
+* interface management, while also implementing a clean and informative graphical layout for amateur radio operators.
+* As those who came before, and those who will come after me, do what ye will with this codebase and project.
+* If you find it useful, inspiring, or a good base to build your own SDR projects on, then I have succeeded in my goals.
+* If you have found a fun project or a first project or radio and had a good time building and learning, then I have succeeded in my goals.
+*
+* Any BUGS, ISSUES, OR FEATURE REQUESTS can be submitted on the GitHub repository page for this project: https://github.com/kilodelta8/NOVIS-Hexa-SDR
+* There is also my email: kd8ufzATliveDOTcom
+*/
+
+
 #include <Wire.h>
 #include <si5351.h>
 #include <TFT_eSPI.h> 
