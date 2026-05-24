@@ -46,7 +46,7 @@ const int KEYER_RING   = 9;   // 3.5mm TRS Ring (Paddles: DASH / Straight: SHORT
 // ============================================================================
 // GLOBAL RADIO ARCHITECTURE STATES
 // ============================================================================
-volatile long baseFrequency  = 14060000; // Default startup on 20m CW (14.060 MHz)
+volatile long baseFrequency  = 14025000; // Default startup on 20m CW (14.025 MHz)
 volatile long ritOffset      = 0;
 volatile bool ritActive      = false;
 volatile long tuningStepSize = 100;      // Default tuning resolution increments (100 Hz)
