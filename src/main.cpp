@@ -15,7 +15,6 @@
 * There is also my email: kd8ufzATliveDOTcom
 */
 
-
 #include <Wire.h>
 #include <si5351.h>
 #include <TFT_eSPI.h> 
@@ -32,7 +31,7 @@ Si5351 si5351;
 const int ENCODER_A    = 4;   // Rotary Pulse Line A
 const int ENCODER_B    = 5;   // Rotary Pulse Line B
 const int ENCODER_SW   = 6;   // Rotary Click Switch Pin
-const int AUDIO_IN_PIN = 1;   // ESP32-S3 ADC1_CH0 (I-Channel Audio Line)
+const int AUDIO_IN_PIN = 1;   // ESP32-S3 ADC1_CH0 (I-Channel Audio Input Line)
 
 const int BTN_VFO      = 7;   // Button 1: VFO/Memory Toggle
 const int BTN_CALL     = 2;   // Button 2: Auto-CQ Beacon / Hold to Program
@@ -40,6 +39,9 @@ const int BTN_MENU     = 3;   // Button 3: Setup Menu Toggle / Exit
 const int BTN_BAND     = 21;  // Button 4: Cyclic 6-Band Selector
 const int BTN_MODE     = 47;  // Button 5: CW / USB Mode Switch
 const int BTN_RIT      = 48;  // Button 6: Receiver Incremental Tuning Offset
+
+const int KEYER_TIP    = 8;   // 3.5mm TRS Tip (Paddles: DOT / Straight: KEY)
+const int KEYER_RING   = 9;   // 3.5mm TRS Ring (Paddles: DASH / Straight: SHORT TO GND)
 
 // ============================================================================
 // GLOBAL RADIO ARCHITECTURE STATES
@@ -52,6 +54,9 @@ volatile bool frequencyChanged = true;
 
 enum RadioMode { MODE_CW, MODE_SSB };
 RadioMode currentMode = MODE_CW;
+
+enum KeyerType { KEYER_STRAIGHT, KEYER_IAMBIC };
+KeyerType activeKeyerMode = KEYER_STRAIGHT;
 
 // Smart Auto-CQ Beacon Flags
 bool isAutoCQRunning = false;
@@ -69,6 +74,7 @@ long lastDisplayedStep  = -1;
 int lastMeterValue      = -1;
 RadioMode lastDisplayedMode = MODE_SSB;
 int lastDisplayedBand   = -1;
+KeyerType lastKeyerMode     = KEYER_STRAIGHT;
 
 // ============================================================================
 // CW TERMINAL WINDOW BUFFER CONSTANTS
@@ -133,6 +139,20 @@ void setup() {
   pinMode(BTN_MODE,  INPUT_PULLUP);
   pinMode(BTN_RIT,   INPUT_PULLUP);
 
+  // Bind hardware keyer input tracking lines
+  pinMode(KEYER_TIP,  INPUT_PULLUP);
+  pinMode(KEYER_RING, INPUT_PULLUP);
+
+  // --- INTERACTIVE BOOT-UP AUDIO JACK IMPEDANCE AUTO-SENSING ---
+  delay(100); // Allow transient electrical line contact noise to settle out fully
+  if (digitalRead(KEYER_RING) == LOW) {
+    activeKeyerMode = KEYER_STRAIGHT;
+    Serial.println("Auto-Sensing: Mono TS Short Circuit Detected. Mode: STRAIGHT KEY.");
+  } else {
+    activeKeyerMode = KEYER_IAMBIC;
+    Serial.println("Auto-Sensing: Stereo TRS High Impedance Detected. Mode: IAMBIC KEYER.");
+  }
+
   // Instant vector change tracking pin interrupts bound to Core 0 calculation paths
   attachInterrupt(digitalPinToInterrupt(ENCODER_A), readEncoderISR, CHANGE);
 
@@ -158,7 +178,7 @@ void IRAM_ATTR readEncoderISR() {
 }
 
 // ============================================================================
-// CORE 0: AUDIO SAMPLING, GOERTZEL MATH & HARDWARE REGISTER WRITING
+// CORE 0: SAMPLING, GOERTZEL FILTERING & TRANSMITTER KEYER DEPLOYMENT
 // ============================================================================
 void Core0DSPDecoderLoop(void * pvParameters) {
   // Pre-calculate highly optimized static Goertzel filtration coefficients
@@ -184,7 +204,10 @@ void Core0DSPDecoderLoop(void * pvParameters) {
       si5351.set_freq(mixerClockTarget * 100ULL, SI5351_CLK0);
     }
 
-    // B. Live Goertzel Signal Processing Loop block execution
+    // B. Direct Real-time Hardware Operator Keying Input Routing Execution
+    handleOperatorKeyInput();
+
+    // C. Live Goertzel Signal Processing Loop block execution
     float q0 = 0, q1 = 0, q2 = 0;
     
     for (int i = 0; i < N; i++) {
@@ -199,7 +222,7 @@ void Core0DSPDecoderLoop(void * pvParameters) {
     bool toneDetected = (magnitudeSquared > 150000.0); // Variable amplitude lock trigger threshold
     unsigned long now = millis();
 
-    // C. Decode Timing State Machine Logic
+    // D. Decode Timing State Machine Logic
     if (toneDetected && !isToneActive) {
       isToneActive = true;
       unsigned long offDuration = now - toneEndTime;
@@ -235,6 +258,37 @@ void Core0DSPDecoderLoop(void * pvParameters) {
 }
 
 // ============================================================================
+// CORE 0 PROACTIVE CW SIGNAL KEYING GENERATOR ENGINE
+// ============================================================================
+void handleOperatorKeyInput() {
+  if (activeKeyerMode == KEYER_STRAIGHT) {
+    // 1. Mono/Straight Key Logic: Mirror contact line closures straight to transmitter registers
+    if (digitalRead(KEYER_TIP) == LOW) {
+      // Future transmitter carrier engagement hook: executeTxCarrier(true);
+    } else {
+      // Future transmitter carrier engagement hook: executeTxCarrier(false);
+    }
+  } 
+  else if (activeKeyerMode == KEYER_IAMBIC) {
+    // 2. Stereo Iambic Keyer Logic: Process active dot/dash side contact lines
+    if (digitalRead(KEYER_TIP) == LOW) {
+      fireAutomatedIambicElement(1); // Execute a highly timed single Dot element length
+    } 
+    else if (digitalRead(KEYER_RING) == LOW) {
+      fireAutomatedIambicElement(3); // Execute a single Dash element length (Exactly 3x Dot weight)
+    }
+  }
+}
+
+void fireAutomatedIambicElement(int elementWeightFactor) {
+  int durationCalculated = dotLength * elementWeightFactor;
+  // Future transmitter carrier engagement hook: executeTxCarrier(true);
+  delay(durationCalculated);
+  // Future transmitter carrier engagement hook: executeTxCarrier(false);
+  delay(dotLength); // Enforce mandatory inter-element timing protection gap spacing
+}
+
+// ============================================================================
 // CORE 1: MAIN APPLICATION OPERATOR INTERFACE & GRAPHICS LOOP
 // ============================================================================
 void loop() {
@@ -258,11 +312,12 @@ void loop() {
     }
   }
 
-  // Step B: Update mode/band indicators dynamically
-  if (currentMode != lastDisplayedMode || currentBandIndex != lastDisplayedBand) {
+  // Step B: Update mode/band/keyer interface text annotations dynamically
+  if (currentMode != lastDisplayedMode || currentBandIndex != lastDisplayedBand || activeKeyerMode != lastKeyerMode) {
     updateStateLabels();
     lastDisplayedMode = currentMode;
     lastDisplayedBand = currentBandIndex;
+    lastKeyerMode     = activeKeyerMode;
   }
 
   // Step C: Route ADC audio activity down to the visual bar-graph meter frame
@@ -291,10 +346,8 @@ void loop() {
 // HARDWARE FRONT PANEL INPUT TRACKING CONTROLLER
 // ============================================================================
 void checkHardwareButtons() {
-  static unsigned long encoderSwTimer = 0;
-  static bool encoderSwPressed = false;
-  static unsigned long callSwTimer     = 0;
-  static bool callSwPressed     = false;
+  static unsigned long encoderSwTimer = 0; static bool encoderSwPressed = false;
+  static unsigned long callSwTimer     = 0; static bool callSwPressed     = false;
 
   // 1. Encoder Multi-Press Timing Logic (Short click vs Long Hold)
   if (digitalRead(ENCODER_SW) == LOW) {
@@ -325,7 +378,6 @@ void checkHardwareButtons() {
       
       if (hold > 1500) {
         Serial.println("BEEP! Launching capacitive touch keyboard setup.");
-        // Touch setup keyboard interface hook goes here
       } else {
         isAutoCQRunning = !isAutoCQRunning; // Short press: toggle the automated CQ loop
       }
@@ -362,7 +414,7 @@ void drawStaticUIFrames() {
   tft.drawRect(0, 0, 480, 320, TFT_BLUE);
   tft.drawLine(0, 160, 480, 160, TFT_BLUE); 
   
-  tft.drawString("NOVIS HEXA-SDR v1.7", 15, 10, 2);
+  tft.drawString("NOVIS HEXA-SDR v1.8", 15, 10, 2);
   tft.drawString("AUDIO BASEBAND S-METER", 15, 95, 2);
   tft.setTextColor(TFT_YELLOW, TFT_BLACK);
   tft.drawString("CW DECODER TERMINAL WINDOW:", 15, 170, 2);
@@ -370,12 +422,13 @@ void drawStaticUIFrames() {
 
 void updateStateLabels() {
   tft.setTextColor(TFT_WHITE, TFT_BLACK);
-  tft.fillRect(15, 40, 180, 45, TFT_BLACK); 
+  tft.fillRect(15, 40, 210, 45, TFT_BLACK); 
   
   String modeText = (currentMode == MODE_CW) ? "MODE: CW" : "MODE: USB";
   tft.drawString(modeText, 15, 40, 2);
   
-  String bandText = "BAND: " + String(bandNames[currentBandIndex]);
+  String keyerText = (activeKeyerMode == KEYER_STRAIGHT) ? " (ST-KEY)" : " (PADDLE)";
+  String bandText = "BAND: " + String(bandNames[currentBandIndex]) + keyerText;
   tft.drawString(bandText, 15, 65, 2);
 }
 
@@ -414,7 +467,6 @@ void drawBarMeter(int percentageValue) {
 void printCharToTerminal(char c) {
   tft.setTextColor(TFT_WHITE, TFT_BLACK);
   
-  // Wrap lines cleanly if text reaches the right edge of the screen frame bounds
   if (terminalLines[currentLineIndex].length() >= 38) {
     if (currentLineIndex < MAX_LINES - 1) {
       currentLineIndex++;
