@@ -16,7 +16,7 @@ The radio natively covers the **40, 20, 17, 15, 12, and 10-meter bands** in both
 │                           INTEGRATED FILTERS SWITCHING                          │
 │                      6x Band Pass  /  6x Low Pass Networks                      │
 +───────────────────┬─────────────────────────────────────────▲───────────────────+
-│ [RX Signal]                             │ [TX RF Carrier]
+│              [RX Signal]                │            [TX RF Carrier]
 ▼                                         │
 +───────────────────────────────────────+         +───────────┴───────────────────+
 │        ANALOG DETECTOR PRE-AMP        │         │    POWER AMPLIFIER STAGE      │
@@ -24,8 +24,8 @@ The radio natively covers the **40, 20, 17, 15, 12, and 10-meter bands** in both
 │  - 74AC74 Dual Phase Clock Splitter   │         │  - IRF510 Switching MOSFET    │
 │  - LM358 40dB Differential Amplifier  │         +───────────────────▲───────────+
 +───────────────────┬───────────────────+                             │
-│                                                 │ [Power Control]
-│ (Analog I/Q Baseband Audio)                     │
+│                                                 │            [Power Control]
+│          (Analog I/Q Baseband Audio)            │
 ▼                                                 │
 +─────────────────────────────────────────────────────────────────────┴───────────+
 │                             CORE PROCESSING UNIT                                │

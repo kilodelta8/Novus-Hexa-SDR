@@ -69,6 +69,7 @@ Kit A builds the "brain" and user interface of the radio.
 *   **Rotary Encoder:** A mechanical pulse generator with a built-in push switch used to scroll frequencies and adjust menu options.
 
 ### Physical Wiring Interconnect Blueprint
+```
 [ Display Module ]                  [ ESP32-S3 Dev Board ]                  [ Rotary Encoder ]
 VCC     <------------------------>     5V / 3.3V
 GND     <------------------------>       GND       <-------------------->     GND
@@ -81,7 +82,7 @@ TOUCH_CS<------------------------>     GPIO 18
 GPIO 4      <-------------------->   Output A (CLK)
 GPIO 5      <-------------------->   Output B (DT)
 GPIO 6      <-------------------->   Switch Line (SW)
-
+```
 
 ## 2.2 Software Environment Configuration
 
@@ -193,7 +194,9 @@ void loop() {
 
 ## 3.1 Understanding RF Power Detection
 
-A transmitter needs a way to evaluate how efficiently its energy travels out into the sky. The SWR & Power Bridge (Directional Coupler) acts as an inline diagnostic sensor placed directly between the output low-pass filters and the antenna BNC jack.       [ From LPF Transmit Network Input ]
+A transmitter needs a way to evaluate how efficiently its energy travels out into the sky. The SWR & Power Bridge (Directional Coupler) acts as an inline diagnostic sensor placed directly between the output low-pass filters and the antenna BNC jack.    
+```   
+[ From LPF Transmit Network Input ]
                       │
                       ▼
             +-------------------+
@@ -217,6 +220,8 @@ A transmitter needs a way to evaluate how efficiently its energy travels out int
                  |         |
                  ▼         ▼
              [ESP32 Analog Sense Input Pins]
+```
+
 When high-frequency alternating current passes down the central wire toward an antenna, it creates a moving magnetic field. By wrapping a secondary sensing coil of wire around a high-permeability FT37-43 ferrite toroid core, we sample a tiny fraction of that electromagnetic energy.
 
 **Forward Voltage** ($V_{\text{fwd}}$): Measures the raw power leaving the transmitter.
@@ -225,7 +230,9 @@ When high-frequency alternating current passes down the central wire toward an a
 
 Two fast 1N4148 diodes act as RF rectifiers, converting this high-frequency AC signal into smooth DC voltage that our microcontroller can easily read.
 
-## 3.2 Schematic & Physical AssemblyAssemble the bridge circuit on your prototyping block using the following configuration map:                            FT37-43 Core
+## 3.2 Schematic & Physical AssemblyAssemble the bridge circuit on your prototyping block using the following configuration map:            
+```                
+                            FT37-43 Core
                          +-----------------+
 Transmitter Input ------ |== Primary Pass =| ------ BNC Antenna Pin
                          +--------+--------+
@@ -243,6 +250,7 @@ Transmitter Input ------ |== Primary Pass =| ------ BNC Antenna Pin
              Cap     Pot    GPIO 34                Cap     Pot    GPIO 35
                │       │ (ADC Pin)                   │       │ (ADC Pin)
              GND     GND                           GND     GND
+```
 **51 Ω 1-Watt Termination Resistors:** These handle the excess RF energy sampled by the sensing loop. They must be rated for at least 0.5W to 1W to prevent them from burning open during high-SWR tuning testing.
 
 **10k Ω Trimpots:** These serve as adjustable safety dividers. They ensure the rectified voltage never exceeds 3.3V, protecting the ESP32's sensitive ADC inputs from over-voltage damage.
@@ -283,7 +291,9 @@ Winding inductors on small carbonyl iron toroid rings is a core skill in homebre
 
 **Enamel Removal:** The wire is insulated with a clear polyurethane coating. Before soldering the toroid lead into the circuit board, you must strip this insulation away. Use fine sandpaper, a hobby knife to scrape the tip clean, or melt the enamel coating away using a hot blob of solder on your iron's tip.
 
-## 4.3 Master Filter Matrix Constants TableEvery band uses a 7-element Chebyshev configuration for the transmit LPF bank (3 toroids, 4 capacitors) and a 2-pole inductively coupled loop for the receive BPF bank (2 toroids, 3 capacitors).All capacitors listed below MUST be high-stability, high-voltage (100V minimum) components featuring an NP0 or C0G dielectric rating to prevent frequency drift when the radio warms up.================================================================================
+## 4.3 Master Filter Matrix Constants TableEvery band uses a 7-element Chebyshev configuration for the transmit LPF bank (3 toroids, 4 capacitors) and a 2-pole inductively coupled loop for the receive BPF bank (2 toroids, 3 capacitors).All capacitors listed below MUST be high-stability, high-voltage (100V minimum) components featuring an NP0 or C0G dielectric rating to prevent frequency drift when the radio warms up.
+```
+================================================================================
 MASTER MATRIX VALUE SPECIFICATIONS
 ================================================================================
 BAND   | TRANSMIT LPF MATRIX VALUES          | RECEIVE BPF MATRIX VALUES
@@ -307,8 +317,11 @@ BAND   | TRANSMIT LPF MATRIX VALUES          | RECEIVE BPF MATRIX VALUES
 10m    | 3x T37-6 (Yellow)| 82 pF  | 180 pF  | 2x T37-6 (Yellow)| 68 pF  | 3.3 pF
        | 10 Turns         |                  | 11 Turns         |
 ================================================================================
+```
 
-## 4.4 Automated Relay Routing NetworkTo automatically swap the correct filter modules into the antenna line when you spin the VFO knob, the ESP32 controls a matrix of six Omron G5V-2 sub-miniature 5V DPDT relays.                       +5V Supply Rail
+## 4.4 Automated Relay Routing NetworkTo automatically swap the correct filter modules into the antenna line when you spin the VFO knob, the ESP32 controls a matrix of six Omron G5V-2 sub-miniature 5V DPDT relays.    
+```                   
+                      +5V Supply Rail
                              │
                              ▼
                     +--------+--------+
@@ -324,13 +337,17 @@ BAND   | TRANSMIT LPF MATRIX VALUES          | RECEIVE BPF MATRIX VALUES
                              │ (1k Resistor)
                              │
                      ESP32 Band GPIO Pin
+```
+
 The ESP32 pins cannot supply enough current to drive a mechanical relay coil directly. To fix this, each relay coil is switched using an affordable 2N2222 NPN transistor.When the ESP32 drives its designated band pin HIGH (3.3V), current flows through a 1 kΩ resistor into the transistor's Base. This turns the transistor fully ON, pulling the bottom of the relay coil to Ground and cleanly latching the matching filter module into the active signal path.
 
 ---
 
 # CHAPTER 5: KIT D - ACTIVE RF MIXER, PRE-AMP & TRANSMITTER PA
 
-## 5.1 The FST3253 Tayloe Mixer CircuitThe heart of the receiver is the FST3253 high-speed bus multiplexer chip, operating as a Tayloe Quadrature Sampling Detector.                    74AC74 Phase Splitter
+## 5.1 The FST3253 Tayloe Mixer CircuitThe heart of the receiver is the FST3253 high-speed bus multiplexer chip, operating as a Tayloe Quadrature Sampling Detector.           
+```         
+                    74AC74 Phase Splitter
                   +------------------------+
 Si5351A CLK0 ---->| Clock Input (4x Freq)  |
                   |                        |
@@ -348,9 +365,13 @@ Antenna Signal ─────────────────────�
                                          │  │  │  │
                                          ▼  ▼  ▼  ▼
                                       [ Analog I/Q Audio ]
+```
+
 The Si5351A clock generator outputs a high-frequency square wave at exactly four times your operating frequency. This 4x carrier enters the 74AC74 dual D-type flip-flop, which splits it into four synchronized output lines, each delayed by exactly 90 degrees ($0^\circ, 90^\circ, 180^\circ, 270^\circ$).These four clock phases rapidly open and close the internal electronic switches of the FST3253 multiplexer chip. This cycles the antenna's incoming RF signal across four identical 10nF polypropylene sampling capacitors, cleanly dropping the radio waves straight down into baseband I (In-Phase) and Q (Quadrature) audio signals.
 
-## 5.2 Audio Pre-Amplifier StageThe audio signals leaving the mixer are incredibly faint (measured in microvolts) and must be amplified before the ESP32 can process them. We use an LM358 operational amplifier configured for differential gain.Mixer Phase 0°  ───[ 1k ]───┬───┐
+## 5.2 Audio Pre-Amplifier StageThe audio signals leaving the mixer are incredibly faint (measured in microvolts) and must be amplified before the ESP32 can process them. We use an LM358 operational amplifier configured for differential gain.
+```
+Mixer Phase 0°  ───[ 1k ]───┬───┐
                             │   ▼
                             │ ┌───┐
                             ├─┤ - │
@@ -360,13 +381,17 @@ Mixer Phase 180°───[ 1k ]───┼─┤ + │
                             ├───[ 100k Feedback ]───┐
                             │                       │
                             └───[ 1.65V DC Bias ]───┘
+```
 **Gain Calculation:** By placing a 100k Ω feedback resistor across the operational amplifier circuit alongside a 1k Ω input resistor, we establish a fixed stage gain of exactly 100x (40 dB of amplification).
 
 **The 1.65V Virtual Ground Bias:** Because the ESP32's ADC pins can only safely process positive DC voltages (0V to 3.3V), a dual 10 kΩ resistor divider network acts as a voltage splitter. This injects a continuous 1.65V DC baseline bias offset right onto the input lines, centering the amplified audio wave perfectly in the middle of the microcontroller's safe sampling window.
 
-## 5.3 IRF510 Class-E Power AmplifierFor transmitting, we use an affordable IRF510 power MOSFET configured as an efficient, high-speed Class-E switching amplifier.Si5351A CLK1 ──> [ 74ACT08 Buffer ] ──[ 10 Ohm ]──┬──> IRF510 Gate
+## 5.3 IRF510 Class-E Power AmplifierFor transmitting, we use an affordable IRF510 power MOSFET configured as an efficient, high-speed Class-E switching amplifier.
+```
+Si5351A CLK1 ──> [ 74ACT08 Buffer ] ──[ 10 Ohm ]──┬──> IRF510 Gate
                                                    │
                                             [ Gate Bias pot ] (1.65V - 3.8V)
+```
 **The 74ACT08 Gate Driver:** The Si5351A clock generator breakout board lacks the drive current required to switch the heavy internal gate capacitance of the IRF510 cleanly at high frequencies. We pass the clock signal through a fast 74ACT08 logic buffer gate to ensure clean, crisp switching.
 
 **The Adjustable Bias Circuit:** MOSFETs require a steady DC bias voltage on their gate before they begin conducting. By running an adjustable voltage divider trimpot from the power rail, you can manually dial the gate bias from 1.65V up to 3.8V. This allows you to scale the radio's output power safely from a stealthy 0.1 Watts up to a full 10 Watts.
@@ -381,7 +406,9 @@ Mixer Phase 180°───[ 1k ]───┼─┤ + │
 
 **Microphone / Keyer Chassis Jack (GX16-4):** Mounted on the lower right front panel, allowing easy access for hand microphone PTT or a Morse code straight key.
 
-## 6.2 Master Production Interconnection SchematicThis comprehensive system blueprint shows how the completed kits link together across the internal frame walls:+-----------------------------------------------------------------------------------------+
+## 6.2 Master Production Interconnection SchematicThis comprehensive system blueprint shows how the completed kits link together across the internal frame walls:
+```
++-----------------------------------------------------------------------------------------+
 |                                   NOVUS HEXA-SDR CHASSIS                                |
 |                                                                                         |
 |  [ LEFT PANEL: POWER ]                                         [ RIGHT PANEL: SIGNALS ] |
@@ -403,13 +430,13 @@ Mixer Phase 180°───[ 1k ]───┼─┤ + │
 |  GX16-4 Mic Jack ──────────────────────── Audio Pins ──────────┘                        |
 |                                                                                         |
 +-----------------------------------------------------------------------------------------+
-
+```
 ---
 
 # CHAPTER 7: PRODUCTION COMPREHENSIVE BILL OF MATERIALS
 
 This master production ledger accounts for every individual component required to source and pack the complete 5-stage Novus Hexa-SDR kit system.
-
+```
 ================================================================================
 KIT PACKAGE A: CORE PROCESSING, DISPLAY & OPERATOR INTERFACE
 ================================================================================
@@ -471,7 +498,7 @@ KIT PACKAGE E: CHASSIS, POWER STORAGE & ENCLOSURE MECHANICS
 [E5]  1x 3S 12.6V Lithium Battery Balance Charger/BMS Protection Board module
 [E6]  1x SPST Heavy-Duty Toggle or Rocker Power Switch (Far Left Front Faceplate)
 ================================================================================
-
+```
 ---
 
 # CHAPTER 8: MASTER PRODUCTION COMPREHENSIVE CODE REFERENCE
@@ -761,3 +788,4 @@ char lookupMorse(String elements) {
   if (elements == "-.--") return 'Y'; if (elements == "--..") return 'Z';
   return '?'; 
 }
+```
