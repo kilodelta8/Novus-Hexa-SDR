@@ -16,61 +16,33 @@ The **Novis Hexa-SDR** is an open-source, kit-modular, 6-band QRP (Low Power) Hi
 # CHAPTER 1: ARCHITECTURE OVERVIEW
 
 Before melting solder, it is critical to understand how the signals flow inside the Novis Hexa-SDR. The radio combines a **Software Defined Radio (SDR)** digital interface with an analog receiver and transmitter front end.
-
+```
                   +-------------------+
                   |   Antenna (BNC)   |
                   +---------+---------+
                             |
                             ▼
-          +-----------------------------------+
-          | Kit C: Integrated Filter Matrix   |
-          |       (6x BPFs and 6x LPFs)       |
-          +----+-------------------------^----+
-               |                         |
-    [Receive Path]                [Transmit Path]
-               |                         |
-               ▼                         |
-+--------------------------------------+     |
-| Kit D: Analog Mixer & Pre-Amp        |     |
-|   - FST3253 Tayloe Mixer             |     |
-|   - 74AC74 Phase Splitter (4x clock) |     |
-|   - LM358 Differential Audio Amp     |     |
-+------------------+-------------------+     |
-|                         |
-(Analog I/Q Audio Channels)           |
-|                         |
-▼                         |
-+--------------------------------------+     |
-| Kit A: Core Processing & Display     |     |
-|   - ESP32-S3 (Dual-Core DSP Engine)  |     |
-|   - 4.0" ST7796S Color LCD Screen    |     |
-|   - Rotary VFO & Tactile Interface   |     |
-+------------------+-------------------+     |
-|                         |
-(VFO Clock Signals)               |
-|                         |
-▼                         |
-+------------------+-------------------+     |
-| Kit A: Si5351A Clock Generator       |     |
-+------------------+-------------------+     |
-|                         |
-(Raw RF Phase Carrier)               |
-|                         |
-▼                         |
-+--------------------------+--------+
-| Kit D: Transmitter Power Amplifier|
-|   - 74ACT08 Logic Gate Driver     |
-|   - IRF510 Class-E Power MOSFET   |
-+------------------+----------------+
-|
-▼
-+-----------------------------------+
-| Kit B: SWR & Power Bridge Circuit |
-+------------------+----------------+
-|
-▼
-[ To Filter Matrix ]
-
++─────────────────────────────────────────────────────────────────────────────────+
+│                           INTEGRATED FILTERS SWITCHING                          │
+│                      6x Band Pass  /  6x Low Pass Networks                      │
++───────────────────┬─────────────────────────────────────────▲───────────────────+
+                    │ [RX Signal]                             │ [TX RF Carrier]
+                    ▼                                         │
++───────────────────────────────────────+         +───────────┴───────────────────+
+│        ANALOG DETECTOR PRE-AMP        │         │    POWER AMPLIFIER STAGE      │
+│  - FST3253 High-Speed Tayloe Mixer    │         │  - 74ACT08 High-Current Driver│
+│  - 74AC74 Dual Phase Clock Splitter   │         │  - IRF510 Switching MOSFET    │
+│  - LM358 40dB Differential Amplifier  │         +───────────────────▲───────────+
++───────────────────┬───────────────────+                             │
+                    │                                                 │ [Power Control]
+                    │ (Analog I/Q Baseband Audio)                     │
+                    ▼                                                 │
++─────────────────────────────────────────────────────────────────────┴───────────+
+│                             CORE PROCESSING UNIT                                │
+│           ESP32-S3 Dual-Core Brain  &  Si5351A Clock VFO Generator              │
+│  - Core 0: 10kHz Goertzel DSP Decoder    - Core 1: High-Response UI Rendering   │
++─────────────────────────────────────────────────────────────────────────────────+
+```
 
 ### The Receive (RX) Flow
 1.  **Filtering:** The antenna captures an array of electromagnetic signals. The **Filter Matrix (Kit C)** isolates only the specific amateur band you have tuned to, blocking out strong commercial AM/FM broadcast interference.
