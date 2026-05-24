@@ -8,7 +8,7 @@
 The **Novus Hexa-SDR** is a modular, budget-friendly, 6-band QRP (low-power) high-frequency (HF) amateur radio transceiver designed specifically for student builders, classroom settings, and newly licensed Technician or General Class operators. Built around the powerful dual-core **ESP32-S3 microcontroller** and a vibrant **4.0-inch color LCD display**, this radio seamlessly combines modern software-defined architectures with tactile, traditional analog radio frequency (RF) design.
 
 The radio natively covers the **40, 20, 17, 15, 12, and 10-meter bands** in both **CW (Morse Code)** and **SSB (Voice/USB)** operational modes, delivering an output range dynamically selectable from **0.1 Watts to a full 10 Watts**. 
-
+```
                               [ ANTENNA BNC ]
                                      │
                                      ▼
@@ -32,7 +32,7 @@ The radio natively covers the **40, 20, 17, 15, 12, and 10-meter bands** in both
 │           ESP32-S3 Dual-Core Brain  &  Si5351A Clock VFO Generator              │
 │  - Core 0: 10kHz Goertzel DSP Decoder    - Core 1: High-Response UI Rendering   │
 +─────────────────────────────────────────────────────────────────────────────────+
-
+```
 
 ---
 
