@@ -4,8 +4,9 @@ SECTION A: CORE PROCESSING, DISPLAY & OPERATOR INTERFACE
 [1]  1x Hoysond 4.0" 320x480 ST7796S SPI LCD Screen         $22.00  To Order
 [2]  1x ESP32-S3 Development Board (Dual-Core USB-C)         $7.00  To Order
 [3]  1x Si5351A Clock Generator Breakout Module              $6.00  To Order
-[4]  1x Rotary Encoder (Bourns PEC11R or equiv with switch)  $2.50  To Order
+[4]  1x Rotary Encoder (Bourns PEC11R VFO Dial)              $2.50  To Order
 [5]  6x Momentary Tactile Push Buttons (Right Front Panel)    $1.80  To Order
+[6]  1x 10k Ohm Panel Mount Potentiometer (Volume Control)    $1.20  To Order  <-- UPGRADE ADDED
 [8a] 1x GX16 4-Pin Chassis Connector (Bottom Right Front)    $1.50  To Order
 [8b] 1x 4-Pin Cobra/Uniden Style Replacement Hand Microphone $12.00  To Order
 
@@ -50,5 +51,7 @@ SECTION E: CHASSIS, POWER STORAGE & ENCLOSURE MECHANICS
 [14b] 1x 3S 11.1V 3200mAh Lithium-Ion Battery Pack          $14.00  To Order
 [14c] 1x 3S 12V Lithium Battery Charger/BMS Protection Board  $2.50  To Order
 [15]  1x SPST Heavy-Duty Toggle Power Switch (Far Left Front) $0.75  To Order
+[16]  1x 3.5mm TRS Stereo Panel Mount Keyer Jack (Right Wall)  $0.90  To Order
+[17]  1x 3.5mm TRS Stereo Panel Mount Headphone Jack (Right)   $0.90  To Order  <-- UPGRADE ADDED
 ================================================================================
-GRAND TOTAL KIT RAW MATERIAL COST:                           ~$132.10
+GRAND TOTAL KIT RAW MATERIAL COST:                           ~$135.10
